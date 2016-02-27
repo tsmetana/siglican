@@ -198,17 +198,27 @@ def get_exif_tags(source):
     # Provide more accessible tags in the 'simple' key
     if 'FNumber' in data:
         fnumber = data['FNumber']
-        simple['fstop'] = float(fnumber[0]) / fnumber[1]
+        if len(fnumber) == 1:
+            simple['fstop'] = float(fnumber[0])
+        else:
+            simple['fstop'] = float(fnumber[0]) / fnumber[1]
 
     if 'FocalLength' in data:
         focal = data['FocalLength']
-        simple['focal'] = round(float(focal[0]) / focal[1])
+        if len(focal) == 1:
+            simple['focal'] = float(focal[0])
+        else:
+            simple['focal'] = round(float(focal[0]) / focal[1])
 
     if 'ExposureTime' in data:
-        if isinstance(data['ExposureTime'], tuple):
-            simple['exposure'] = '{0}/{1}'.format(*data['ExposureTime'])
-        elif isinstance(data['ExposureTime'], int):
-            simple['exposure'] = str(data['ExposureTime'])
+        exp_time = data['ExposureTime']
+        if isinstance(exp_time, tuple):
+            if len(exp_time) == 1:
+                simple['exposure'] = str(exp_time[0])
+            else:
+                simple['exposure'] = '{0}/{1}'.format(*exp_time)
+        elif isinstance(exp_time, int):
+            simple['exposure'] = str(exp_time)
         else:
             logger.warning('Unknown format for ExposureTime: %r (%s)',
                            data['ExposureTime'], source)
@@ -219,7 +229,7 @@ def get_exif_tags(source):
     if 'DateTimeOriginal' in data:
         try:
             # Remove null bytes at the end if necessary
-            date = data['DateTimeOriginal'].rsplit('\x00')[0]
+            date = data['DateTimeOriginal'][0].rsplit('\x00')[0]
             simple['dateobj'] = datetime.strptime(date, '%Y:%m:%d %H:%M:%S')
             dt = simple['dateobj'].strftime('%A, %d. %B %Y')
 
